@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Rep Ur City Domination</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: #1a1a1a;
+        color: white;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+      }
+
+      .container {
+        max-width: 100%;
+        height: 100vh;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #gameCanvas {
+        background: #000;
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+
+      .menu-screen {
+        text-align: center;
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      }
+
+      .game-title {
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        color: #4caf50;
+        text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      }
+
+      .leaderboard {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .leaderboard-entry {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px;
+        border-bottom: 1px solid #333;
+      }
+
+      .btn {
+        background: #4caf50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn:hover {
+        background: #45a049;
+        transform: scale(1.05);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      #progressBar {
+        width: 80%;
+        height: 30px;
+        background: #333;
+        border-radius: 15px;
+        overflow: hidden;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+
+      #progressFill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #45a049);
+        transition: width 0.1s ease;
+      }
+
+      .hearts {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 24px;
+        color: #ff4444;
+        z-index: 100;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      .score {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 24px;
+        z-index: 100;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      .setup-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 90%;
+        max-width: 300px;
+      }
+
+      .input-field {
+        padding: 12px;
+        border: none;
+        border-radius: 25px;
+        background: #333;
+        color: white;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+
+      .input-field:focus {
+        background: #444;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      }
+
+      .social-share {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .pause-menu {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
+        border-radius: 10px;
+        z-index: 1000;
+        display: none;
+      }
+
+      @media (max-width: 768px) {
+        .game-title {
+          font-size: 2em;
+        }
+
+        .btn {
+          padding: 10px 20px;
+          font-size: 14px;
+        }
+
+        .hearts,
+        .score {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Home Screen -->
+      <div id="homeScreen" class="menu-screen">
+        <h1 class="game-title">Rep Ur City Domination</h1>
+        <div class="leaderboard">
+          <h2>Top 10 Players</h2>
+          <div id="leaderboardList"></div>
+        </div>
+        <button class="btn" id="playBtn">Play Game</button>
+      </div>
+
+      <!-- Player Setup Screen -->
+      <div id="setupScreen" class="menu-screen hidden">
+        <h2>Player Setup</h2>
+        <div class="setup-form">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Enter Username"
+            class="input-field"
+            maxlength="20"
+            autocomplete="username"
+            required
+          />
+          <select
+            id="citySelect"
+            name="city"
+            class="input-field"
+            required
+            autocomplete="off"
+          >
+            <option value="">Select Your City</option>
+          </select>
+          <button class="btn" id="startGameBtn">Start Game</button>
+        </div>
+      </div>
+
+      <!-- Game Screen -->
+      <div id="gameScreen" class="hidden">
+        <div class="hearts" id="hearts">❤️❤️❤️</div>
+        <div class="score" id="score">Score: 0</div>
+        <div id="progressBar" style="display: none">
+          <div id="progressFill"></div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <!-- Pause Menu -->
+      <div id="pauseMenu" class="pause-menu">
+        <h2>Game Paused</h2>
+        <button class="btn" id="resumeBtn">Resume</button>
+        <button class="btn" id="quitBtn">Quit to Menu</button>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="gameOverScreen" class="menu-screen hidden">
+        <h2>Game Over</h2>
+        <div id="finalScore"></div>
+        <div id="highScoreMessage" class="hidden">
+          <h3>New High Score!</h3>
+          <div class="social-share">
+            <button class="btn" id="shareTwitter">Share on Twitter</button>
+            <button class="btn" id="shareFacebook">Share on Facebook</button>
+          </div>
+        </div>
+        <button class="btn" id="playAgainBtn">Play Again</button>
+        <button class="btn" id="homeBtn">Home</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import { RUCGame } from "/js/game.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const game = new RUCGame();
+      });
+    </script>
+  </body>
+</html>
